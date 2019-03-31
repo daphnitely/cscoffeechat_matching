@@ -18,8 +18,7 @@
     "default": {
         "python-http-client": {
             "hashes": [
-                "sha256:7e430f4b9dd2b621b0051f6a362f103447ea8e267594c602a5c502a0c694ee38",
-                "sha256:a7a40b48ca7ee9488690af53c9e751f54933977ec6ed3fa1a29de71f5ccf45eb"
+                "sha256:7e430f4b9dd2b621b0051f6a362f103447ea8e267594c602a5c502a0c694ee38"
             ],
             "version": "==3.1.0"
         },
