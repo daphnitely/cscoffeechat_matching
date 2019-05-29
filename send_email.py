@@ -14,7 +14,7 @@ from google.auth.transport.requests import Request
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 # The ID and range of a sample spreadsheet.
-SPREADSHEET_ID = '0'
+SPREADSHEET_ID = '195369623'
 RANGE_NAME = 'Class Data!A2:E'
 
 def main():
