@@ -9,5 +9,6 @@ verify_ssl = true
 sendgrid = "*"
 google-api-python-client = "*"
 google_auth_oauthlib = "*"
+
 [requires]
 python_version = "3.6"

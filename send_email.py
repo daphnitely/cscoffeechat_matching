@@ -13,9 +13,10 @@ from google.auth.transport.requests import Request
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
-# The ID and range of a sample spreadsheet.
-SPREADSHEET_ID = '195369623'
-RANGE_NAME = 'Class Data!A2:E'
+# helpful documentation: https://developers.google.com/sheets/api/guides/concepts
+# The ID and range of coffee chat matching spreadsheet
+SPREADSHEET_ID = '1ejbnTskarzX0VgJonjn2wGrdOmKV4k-75itr4mPLcQU'
+RANGE_NAME = 'Sheet1!A1:B2' # refers to rows 1 and 2 of columns A and B
 
 def main():
     """Shows basic usage of the Sheets API.
@@ -54,16 +55,15 @@ def main():
         print('Name, Major:')
         for row in values:
             # Print columns A and E, which correspond to indices 0 and 4.
-            print('%s, %s' % (row[0], row[4]))
+            print('%s, %s' % (row[0], row[1]))
 
 if __name__ == '__main__':
     main()
 
 # Send email
 sg = sendgrid.SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-# TODO: replace with the official cs coffee chat email and update API key
-from_email = "example@gmail.com"
-to_email = "example@gmail.com"
+from_email = "mocha@cscoffeechat.com"
+to_email = "example@example.com"
 subject = "Sending with SendGrid is Fun"
 content = "<strong>and easy to do anywhere, even with Python</strong>"
 mail = Mail(from_email, to_email, subject, content)
