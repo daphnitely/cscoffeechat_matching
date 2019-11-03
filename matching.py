@@ -5,10 +5,17 @@ from student import Student
 
 lower_years = []
 upper_years = []
+# These are words that will appear in most intros, and should be ignored when calculating
+# the similarity score.
+# TODO: improve the set of words that we should ignore.
 ignored_words = ["I", "I'm", "and", "a", "to"]
 
 
 def calculate_points(ranker, rankee):
+    """
+    Quantify how much the ranker might prefer to be matched with the rankee based on
+    whether or not the ranker has a gender preference, and how similar their intros are.
+    """
     points = 0
     ranker_words = ranker.intro.split()
     rankee_words = rankee.intro.split()
@@ -24,12 +31,13 @@ def calculate_points(ranker, rankee):
 
 with open('signup_data/CS-Coffee-Chat_October-13-2019_10.10.csv', 'r') as f:
     reader = csv.reader(f)
-    # Skip first 3 rows because they're all headers
+    # Skip first 3 rows because they're all headers.
     next(reader)
     next(reader)
     next(reader)
     for row in reader:
         year = 0
+        # TODO: don't automatically put BCS into upper years.
         if row[19] == "5+" or row[19] == "BCS":
             year = 5
         else:
@@ -63,6 +71,9 @@ for upperYear in upper_years:
     upper_year_rankings[upperYear.name] = rankingsList
 
 matcher = Matcher(upper_year_rankings, lower_year_rankings)
+
+# matches is a list of lower year students, ordered based on which upper year student
+# they are matched with.
 matches = matcher.match()
 for index, match in enumerate(matches):
     print("{upperYear} with {lowerYear}".format(upperYear=upper_years[index].name, lowerYear=match))
