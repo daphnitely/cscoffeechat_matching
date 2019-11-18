@@ -1,16 +1,26 @@
+import os
 import csv
 
 from matcher import Matcher
 from student import Student
 from datetime import datetime
 
+NAME_COL = 17
+EMAIL_COL = 18
+YEAR_COL = 19
+GENDER_COL = 20
+SAME_GENDER_PREF_COL = 22
+INTRO_COL = 23
+STAY_ENROLLED_COL = 24
+
 lower_years = []
 upper_years = []
+lower_year_name_email_map = {}
+upper_year_name_email_map = {}
 # These are words that will appear in most intros, and should be ignored when calculating
 # the similarity score.
 # TODO: improve the set of words that we should ignore.
 ignored_words = ["I", "I'm", "and", "a", "to"]
-
 
 def calculate_points(ranker, rankee):
     """
@@ -29,33 +39,59 @@ def calculate_points(ranker, rankee):
             points += 10
     return points
 
+def handle_student_row(row):
+    """
+    Take in one row from the signup data and create a Student object from it, and
+    also add it to the correct dictionaries.
+    """
+    year = 0
+    # TODO: don't automatically put BCS into upper years.
+    if row[YEAR_COL] == "5+" or row[YEAR_COL] == "BCS":
+        year = 5
+    else:
+        year = int(row[YEAR_COL])
+    should_match_with_same_gender = False
+    if row[22] == "Yes":
+        should_match_with_same_gender = True
+    student = Student(name=row[NAME_COL], email=row[EMAIL_COL], year=year, gender=row[GENDER_COL],
+                      should_match_with_same_gender=should_match_with_same_gender, intro=row[INTRO_COL])
+    if student.year < 3:
+        lower_years.append(student)
+        lower_year_name_email_map[student.name] = student.email
+    else:
+        upper_years.append(student)
+        upper_year_name_email_map[student.name] = student.email
 
-with open("signup_data/CS-Coffee-Chat_October-13-2019_10.10.csv", "r") as f:
+signup_data_dir_name = "signup_data"
+current_month_file_name = "CS-Coffee-Chat-November_November-1-2019_22.04.csv"
+
+with open(f"{signup_data_dir_name}/{current_month_file_name}", "r") as f:
     reader = csv.reader(f)
     # Skip first 3 rows because they're all headers.
     for _ in range(3):
         next(reader)
     for row in reader:
-        year = 0
-        # TODO: don't automatically put BCS into upper years.
-        if row[19] == "5+" or row[19] == "BCS":
-            year = 5
-        else:
-            year = int(row[19])
-        should_match_with_same_gender = False
-        if row[22] == "Yes":
-            should_match_with_same_gender = True
-        student = Student(name=row[17], email=row[18], year=year, gender=row[20],
-                          should_match_with_same_gender=should_match_with_same_gender, intro=row[23])
-        if student.year < 3:
-            lower_years.append(student)
-        else:
-            upper_years.append(student)
+        handle_student_row(row)
+
+# Iterate through the files of signup data from previous months and add the students who
+# want to re-enroll in CS Coffee Chat automatically.
+for filename in os.listdir(signup_data_dir_name):
+    if filename == current_month_file_name or not filename.endswith(".csv"):
+        continue
+    with open(os.path.join(signup_data_dir_name, filename)) as f:
+        reader = csv.reader(f)
+        # Skip first 3 rows because they're all headers.
+        for _ in range(3):
+            next(reader)
+        for row in reader:
+            if (row[STAY_ENROLLED_COL].strip() == "Yes" and 
+                row[NAME_COL] not in lower_year_name_email_map and 
+                row[NAME_COL] not in upper_year_name_email_map):
+                print(row[NAME_COL])
+                handle_student_row(row)
 
 lower_year_rankings = {}
-lower_year_name_email_map = {}
 for lower_year in lower_years:
-    lower_year_name_email_map[lower_year.name] = lower_year.email
     current_rankings = {}
     for upperYear in upper_years:
         current_rankings[upperYear] = calculate_points(lower_year, upperYear)
