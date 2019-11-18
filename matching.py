@@ -1,9 +1,12 @@
 import os
 import csv
+from datetime import datetime
 
 from matcher import Matcher
 from student import Student
-from datetime import datetime
+
+SIGNUP_DATA_DIR_NAME = "signup_data"
+CURRENT_MONTH_FILE_NAME = "CS-Coffee-Chat-November_November-1-2019_22.04.csv"
 
 NAME_COL = 17
 EMAIL_COL = 18
@@ -21,6 +24,70 @@ upper_year_name_email_map = {}
 # the similarity score.
 # TODO: improve the set of words that we should ignore.
 ignored_words = ["I", "I'm", "and", "a", "to"]
+
+def main():
+    with open(f"{SIGNUP_DATA_DIR_NAME}/{CURRENT_MONTH_FILE_NAME}", "r") as f:
+        reader = csv.reader(f)
+        # Skip first 3 rows because they're all headers.
+        for _ in range(3):
+            next(reader)
+        for row in reader:
+            handle_student_row(row)
+
+    # Iterate through the files of signup data from previous months.
+    for filename in os.listdir(SIGNUP_DATA_DIR_NAME):
+        if filename == CURRENT_MONTH_FILE_NAME or not filename.endswith(".csv"):
+            continue
+        with open(os.path.join(SIGNUP_DATA_DIR_NAME, filename)) as f:
+            reader = csv.reader(f)
+            # Skip first 3 rows because they're all headers.
+            for _ in range(3):
+                next(reader)
+            for row in reader:
+                # Add the students who want to stay enrolled in CS Coffee Chat.
+                if (row[STAY_ENROLLED_COL].strip() == "Yes" and 
+                    row[NAME_COL] not in lower_year_name_email_map and 
+                    row[NAME_COL] not in upper_year_name_email_map):
+                    print(row[NAME_COL])
+                    handle_student_row(row)
+
+    lower_year_rankings = {}
+    for lower_year in lower_years:
+        current_rankings = {}
+        for upper_year in upper_years:
+            current_rankings[upper_year] = calculate_points(lower_year, upper_year)
+        current_rankings = sorted(current_rankings.items(), key=lambda item: item[1], reverse=True)
+        rankings_list = list(map(lambda key_value_pair: key_value_pair[0].name, current_rankings))
+        lower_year_rankings[lower_year.name] = rankings_list
+
+    upper_year_rankings = {}
+    for upperYear in upper_years:
+        current_rankings = {}
+        for lower_year in lower_years:
+            current_rankings[lower_year] = calculate_points(upperYear, lower_year)
+        current_rankings = sorted(current_rankings.items(), key=lambda item: item[1], reverse=True)
+        rankings_list = list(map(lambda key_value_pair: key_value_pair[0].name, current_rankings))
+        upper_year_rankings[upperYear.name] = rankings_list
+
+    matcher = Matcher(upper_year_rankings, lower_year_rankings)
+
+    # matches is a list of lower year students, ordered based on which upper year student
+    # they are matched with.
+    matches = matcher.match()
+
+    csv_header_row = ["Emails", "Mentor name", "Mentee 1 name"]
+    current_month = datetime.now().strftime("%B")
+    current_year = datetime.now().strftime("%Y")
+    current_date_title = f"matching_data/{current_month}_{current_year}_matching.csv"
+    with open(current_date_title, "w+") as f:
+        writer = csv.writer(f)
+        writer.writerow(csv_header_row)
+        for index, match in enumerate(matches):
+            print(f"{upper_years[index].name} with {match}")
+            emails = f"{upper_years[index].email}, {lower_year_name_email_map[match]}"
+            current_row = [emails, upper_years[index].name, match]
+            writer.writerow(current_row)
+    f.close()
 
 def calculate_points(ranker, rankee):
     """
@@ -62,70 +129,7 @@ def handle_student_row(row):
         upper_years.append(student)
         upper_year_name_email_map[student.name] = student.email
 
-signup_data_dir_name = "signup_data"
-current_month_file_name = "CS-Coffee-Chat-November_November-1-2019_22.04.csv"
-
-with open(f"{signup_data_dir_name}/{current_month_file_name}", "r") as f:
-    reader = csv.reader(f)
-    # Skip first 3 rows because they're all headers.
-    for _ in range(3):
-        next(reader)
-    for row in reader:
-        handle_student_row(row)
-
-# Iterate through the files of signup data from previous months and add the students who
-# want to re-enroll in CS Coffee Chat automatically.
-for filename in os.listdir(signup_data_dir_name):
-    if filename == current_month_file_name or not filename.endswith(".csv"):
-        continue
-    with open(os.path.join(signup_data_dir_name, filename)) as f:
-        reader = csv.reader(f)
-        # Skip first 3 rows because they're all headers.
-        for _ in range(3):
-            next(reader)
-        for row in reader:
-            if (row[STAY_ENROLLED_COL].strip() == "Yes" and 
-                row[NAME_COL] not in lower_year_name_email_map and 
-                row[NAME_COL] not in upper_year_name_email_map):
-                print(row[NAME_COL])
-                handle_student_row(row)
-
-lower_year_rankings = {}
-for lower_year in lower_years:
-    current_rankings = {}
-    for upperYear in upper_years:
-        current_rankings[upperYear] = calculate_points(lower_year, upperYear)
-    current_rankings = sorted(current_rankings.items(), key=lambda item: item[1], reverse=True)
-    rankingsList = list(map(lambda key_value_pair: key_value_pair[0].name, current_rankings))
-    lower_year_rankings[lower_year.name] = rankingsList
-
-upper_year_rankings = {}
-for upperYear in upper_years:
-    current_rankings = {}
-    for lower_year in lower_years:
-        current_rankings[lower_year] = calculate_points(upperYear, lower_year)
-    current_rankings = sorted(current_rankings.items(), key=lambda item: item[1], reverse=True)
-    rankingsList = list(map(lambda key_value_pair: key_value_pair[0].name, current_rankings))
-    upper_year_rankings[upperYear.name] = rankingsList
-
-matcher = Matcher(upper_year_rankings, lower_year_rankings)
-
-# matches is a list of lower year students, ordered based on which upper year student
-# they are matched with.
-matches = matcher.match()
-
-csv_header_row = ["Emails", "Mentor name", "Mentee 1 name"]
-current_month = datetime.now().strftime("%B")
-current_year = datetime.now().strftime("%Y")
-current_date_title = f"matching_data/{current_month}_{current_year}_matching.csv"
-with open(current_date_title, "w+") as f:
-    writer = csv.writer(f)
-    writer.writerow(csv_header_row)
-    for index, match in enumerate(matches):
-        print(f"{upper_years[index].name} with {match}")
-        emails = f"{upper_years[index].email}, {lower_year_name_email_map[match]}"
-        current_row = [emails, upper_years[index].name, match]
-        writer.writerow(current_row)
-f.close()
+if __name__ == "__main__":
+    main()
 
 
