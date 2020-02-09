@@ -6,15 +6,15 @@ class Matcher:
 
     Attributes
     ----------
-    upper_years: Dict[str, List[str]]
+    upper_years: Dict[Student, List[Student]]
         Dict of upper year names to list of lower year names
-    lower_years: Dict[str, List[str]]
+    lower_years: Dict[Student, List[Student]]
         Dict of lower year names to list of upper year names
-    urank: Dict[str, Dict[str, int]]
-        Dict of upper year student name to (preferred student name, index) dict.
+    urank: Dict[Student, Dict[Student, int]]
+        Dict of upper year students to (preferred student, index) dict.
         `self.urank[student][other_student]` is student's ranking of other_student.
-    lrank:
-        Dict of lower year student name to (preferred student name, index) dict.
+    lrank: Dict[Student, Dict[Student, int]]
+        Dict of lower year students to (preferred student, index) dict.
     """
 
     def __init__(self, upper_years, lower_years):
@@ -26,7 +26,7 @@ class Matcher:
         self.U = upper_years
         self.L = lower_years
 
-        # we index matching preferences at initialization 
+        # we index matching preferences at initialization
         # to avoid expensive lookups when matching
         self.urank = _build_preferences(upper_years)
         self.lrank = _build_preferences(lower_years)
@@ -37,15 +37,15 @@ class Matcher:
     def prefers(self, lower_year, u, h):
         """
         Test whether lower_year prefers u over h.
-        
+
         Parameters
         ----------
-        lower_year: str
-            Name of a lower year student
-        u: str
-            Name of a new upper year student
-        h: str
-            Name of an old upper year student
+        lower_year: Student
+            A lower year student
+        u: Student
+            A new upper year student
+        h: Student
+            An old upper year student
 
         Output
         ------
@@ -56,10 +56,10 @@ class Matcher:
     def after(self, upper_year, lower_year):
         """
         Return the match favored by upper_year after lower_year.
-        
+
         Output
         ------
-        str: Name of new lower year student
+        Student: New lower year student
         """
         index = self.urank[upper_year][lower_year] + 1  # index of lower year following l in list of prefs
         try:
@@ -73,16 +73,18 @@ class Matcher:
 
         Parameters
         ----------
-        upper_years: List[str]
+        past_matches: Dict[str, List[str]]
+            Past matches dict of upper year names to list of lower year names.
+        upper_years: List[Student]
             List of upper year names.
-        next: Dict[str, str]
+        next: Dict[Student, Student]
             Dict of upper year students to their next preferred lower year student.
-        matches: Dict[]
+        matches: Dict[Student, Student]
             Result so far
 
         Output
         ------
-        Completed `matches` dictionary mapping lower year names to upper year names.
+        Completed `matches` dictionary mapping lower years to upper years.
         """
         # if upper_years is empty, return matches found
         if not upper_years:
@@ -99,13 +101,13 @@ class Matcher:
 
         if next_lower_year in matches:
             current_upper_match = matches[next_lower_year]  # current match
-            if next_lower_year in past_matches.get(current_upper_match, list()):
+            if next_lower_year.name in past_matches.get(current_upper_match.name, list()):
                 # if next_lower_year and current_upper_match had been matched in previous months
                 rest.append(current_upper_match)  # match becomes available again
             if self.prefers(next_lower_year, first_upper_year, current_upper_match):
                 rest.append(current_upper_match)  # match becomes available again
                 # next_lower_year becomes match of first_upper_year
-                matches[next_lower_year] = first_upper_year  
+                matches[next_lower_year] = first_upper_year
             else:
                 rest.append(first_upper_year)  # first_upper_year remains unmatched
         elif next_lower_year is not None:
@@ -117,15 +119,27 @@ class Matcher:
     def match(self, past_matches):
         """
         Try to match all upper_years with their next preferred spouse.
+
+        Parameters
+        ----------
+        past_matches: Dict[str, List[str]]
+            Past matches dict of upper year names to list of lower year names.
+
+        Output
+        ------
+        Completed `matches` dictionary mapping lower years to upper years.
         """
         # get the complete list of upper_years
-        upper_years = list(self.U.keys())  
+        upper_years = list(self.U.keys())
         # if not defined, map each upper year to their first preference
         next = {upper_year_student: ranks[0] for upper_year_student, ranks in self.U.items()}
-        
+
         direct_matches = self._match(past_matches, upper_years, next, matches={})
         # get list of unmatched lower years
-        unmatched = [lower_year for lower_year in self.L.keys() if lower_year not in direct_matches]
+        unmatched_lower = [lower_year.name for lower_year in self.L.keys() if lower_year not in direct_matches]
+        unmatched_upper = [upper_year.name for upper_year in self.U.keys() if upper_year not in direct_matches.values()]
+        print(unmatched_lower)
+        print(unmatched_upper)
         return direct_matches
 
 def _build_preferences(students):
@@ -134,11 +148,15 @@ def _build_preferences(students):
 
     Parameters
     ----------
-    students: Dict[str, List[str]]
+    students: Dict[Student, List[Student]]
         Either upper_years or lower_years
+
+    Output
+    ------
+    Dict[Student, Dict[Student, int]]
     """
     result = defaultdict(dict)
-    for student_name, preferences in students.items():
-        for index, preference_name in enumerate(preferences):
-            result[student_name][preference_name] = index
+    for student, preferences in students.items():
+        for index, preference in enumerate(preferences):
+            result[student][preference] = index
     return result
