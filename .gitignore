@@ -2,3 +2,4 @@ sendgrid.env
 credentials.json
 signup_data/
 .idea/
+__pycache__

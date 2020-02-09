@@ -16,6 +16,7 @@ SAME_GENDER_PREF_COL = 22
 INTRO_COL = 23
 STAY_ENROLLED_COL = 24
 
+# lower_years and upper_years are lists of Students
 lower_years = []
 upper_years = []
 lower_year_name_email_map = {}
@@ -51,24 +52,9 @@ def main():
                     print(row[NAME_COL])
                     handle_student_row(row)
 
-    lower_year_rankings = {}
-    for lower_year in lower_years:
-        current_rankings = {}
-        for upper_year in upper_years:
-            current_rankings[upper_year] = calculate_points(lower_year, upper_year)
-        current_rankings = sorted(current_rankings.items(), key=lambda item: item[1], reverse=True)
-        rankings_list = list(map(lambda key_value_pair: key_value_pair[0].name, current_rankings))
-        lower_year_rankings[lower_year.name] = rankings_list
-
-    upper_year_rankings = {}
-    for upperYear in upper_years:
-        current_rankings = {}
-        for lower_year in lower_years:
-            current_rankings[lower_year] = calculate_points(upperYear, lower_year)
-        current_rankings = sorted(current_rankings.items(), key=lambda item: item[1], reverse=True)
-        rankings_list = list(map(lambda key_value_pair: key_value_pair[0].name, current_rankings))
-        upper_year_rankings[upperYear.name] = rankings_list
-
+    lower_year_rankings = build_rankings(lower_years, upper_years)
+    upper_year_rankings = build_rankings(upper_years, lower_years)
+    
     matcher = Matcher(upper_year_rankings, lower_year_rankings)
 
     # matches is a list of lower year students, ordered based on which upper year student
@@ -88,6 +74,31 @@ def main():
             current_row = [emails, upper_years[index].name, match]
             writer.writerow(current_row)
     f.close()
+
+def build_rankings(from_students, to_students):
+    """
+    Build dictionary of students to list of their preferred students, in order.
+
+    Parameters
+    ----------
+    from_students: List[Student]
+        These students are the rankers, used as dict keys
+    to_students: List[Student]
+        These students are the rankees, used as dict values
+    """
+
+    def getvalue(pair):
+        return pair[1]
+    
+    rankings = {}
+    for student in from_students:
+        student_rankings = {}
+        for other_student in to_students:
+            student_rankings = calculate_points(student, other_student)
+        student_rankings_pairs = sorted(student_rankings.items(), key=getvalue, reverse=True)
+        student_rankings_list = [other.name for other, in student_rankings_pairs]
+        rankings[student.name] = student_rankings_list
+    return rankings
 
 def calculate_points(ranker, rankee):
     """
