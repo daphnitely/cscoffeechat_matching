@@ -4,9 +4,11 @@ from datetime import datetime
 
 from matcher import Matcher
 from student import Student
+from past_matches import create_past_matches_mapping 
 
+CURRENT_MONTH_FILE_NAME = "coffee-2020-02.csv"
 SIGNUP_DATA_DIR_NAME = "signup_data"
-CURRENT_MONTH_FILE_NAME = "CS-Coffee-Chat-November_November-1-2019_22.04.csv"
+PAST_MATCHES_DIR_NAME = "previous_matches"
 
 NAME_COL = 17
 EMAIL_COL = 18
@@ -21,12 +23,20 @@ lower_years = []
 upper_years = []
 lower_year_name_email_map = {}
 upper_year_name_email_map = {}
+
 # These are words that will appear in most intros, and should be ignored when calculating
 # the similarity score.
 # TODO: improve the set of words that we should ignore.
 ignored_words = ["I", "I'm", "and", "a", "to"]
 
 def main():
+    past_matches_map = {}
+    # Iterate through the files of matching results from previous months to create mapping.
+    for filename in os.listdir(PAST_MATCHES_DIR_NAME):
+        with open(os.path.join(PAST_MATCHES_DIR_NAME, filename)) as f:
+            reader = csv.reader(f)
+            create_past_matches_mapping(reader, past_matches_map)
+
     with open(f"{SIGNUP_DATA_DIR_NAME}/{CURRENT_MONTH_FILE_NAME}", "r") as f:
         reader = csv.reader(f)
         # Skip first 3 rows because they're all headers.
@@ -59,7 +69,7 @@ def main():
 
     # matches is a list of lower year students, ordered based on which upper year student
     # they are matched with.
-    matches = matcher.match()
+    matches = matcher.match(past_matches_map)
 
     csv_header_row = ["Emails", "Mentor name", "Mentee 1 name"]
     current_month = datetime.now().strftime("%B")
@@ -129,7 +139,7 @@ def handle_student_row(row):
     else:
         year = int(row[YEAR_COL])
     should_match_with_same_gender = False
-    if row[22] == "Yes":
+    if row[SAME_GENDER_PREF_COL] == "Yes":
         should_match_with_same_gender = True
     student = Student(name=row[NAME_COL], email=row[EMAIL_COL], year=year, gender=row[GENDER_COL],
                       should_match_with_same_gender=should_match_with_same_gender, intro=row[INTRO_COL])

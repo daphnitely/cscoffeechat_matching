@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-
 class Matcher:
     """
     Logic derived from this gist: https://gist.github.com/joyrexus/9967709
@@ -65,7 +64,7 @@ class Matcher:
         index = self.urank[upper_year][lower_year] + 1  # index of lower year following l in list of prefs
         return self.U[upper_year][index]
 
-    def _match(self, upper_years, next, matches):
+    def _match(self, past_matches, upper_years, next, matches):
         """
         Try to match all upper_years with their next preferred lower year student.
 
@@ -98,6 +97,9 @@ class Matcher:
 
         if next_lower_year in matches:
             current_upper_match = matches[next_lower_year]  # current match
+            if next_lower_year in past_matches.get(current_upper_match, list()):
+                # if next_lower_year and current_upper_match had been matched in previous months
+                rest.append(current_upper_match)  # match becomes available again
             if self.prefers(next_lower_year, first_upper_year, current_upper_match):
                 rest.append(current_upper_match)  # match becomes available again
                 # next_lower_year becomes match of first_upper_year
@@ -110,7 +112,7 @@ class Matcher:
             
         return self._match(rest, next, matches)
 
-    def match(self):
+    def match(self, past_matches):
         """
         Try to match all upper_years with their next preferred spouse.
         """
@@ -119,7 +121,7 @@ class Matcher:
         # if not defined, map each upper year to their first preference
         next = {upper_year_student: ranks[0] for upper_year_student, ranks in self.U.items()}
         
-        direct_matches = self._match(upper_years, next, matches={})
+        direct_matches = self._match(past_matches, upper_years, next, matches={})
         # get list of unmatched lower years
         unmatched = [lower_year for lower_year in self.L.keys() if lower_year not in direct_matches]
         return direct_matches
