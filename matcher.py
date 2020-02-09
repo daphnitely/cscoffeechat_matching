@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+from past_matches import past_matches_map 
 
 # Logic derived from this gist: https://gist.github.com/joyrexus/9967709
 
@@ -42,7 +42,7 @@ class Matcher:
 
     def match(self, upper_years=None, next=None, matches=None):
         """
-        Try to match all upper_years with their next preferred spouse.
+        Try to match all upper_years with their next preferred match.
 
         """
         if upper_years is None:
@@ -53,19 +53,22 @@ class Matcher:
         if matches is None:
             matches = {}  # mapping from lowerYears to current match
         if not len(upper_years):
-            self.pairs = [(h, l) for l, h in matches.items()]
+            self.pairs = [(curr, l) for l, curr in matches.items()]
             self.matches = matches
             return matches
         u, upper_years = list(upper_years)[0], list(upper_years)[1:]
-        l = next[u]  # next lower year for u to propose to
+        l = next[u]  # next lower year for u to match to
         next[u] = self.after(u, l)  # lower year after l in u's list of prefs
         if l in matches:
-            h = matches[l]  # current match
-            if self.prefers(l, u, h):
-                upper_years.append(h)  # match becomes available again
+            curr = matches[l]  # current upper year match
+            # If l and curr had been matched in previous months
+            if curr in past_matches_map and l in past_matches_map[curr]:
+                upper_years.append(curr)  # match becomes available again
+            elif self.prefers(l, u, curr): 
+                upper_years.append(curr)  # match becomes available again
                 matches[l] = u  # l becomes match of u
             else:
-                upper_years.append(u)  # u remains unmarried
+                upper_years.append(u)  # u remains available
         else:
             matches[l] = u  # l becomes match of u
         return self.match(upper_years, next, matches)
