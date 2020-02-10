@@ -74,12 +74,12 @@ def main():
     current_month = datetime.now().strftime("%B")
     current_year = datetime.now().strftime("%Y")
     current_date_title = f"matching_data/{current_month}_{current_year}_matching.csv"
-    with open(current_date_title, "w+") as f:
+    with open(current_date_title, "w+", newline='') as f:
         writer = csv.writer(f)
         writer.writerow(csv_header_row)
         for lower_year, upper_year in matches.items():
             # print(f"{upper_year.name} with {lower_year.name}")
-            emails = f"{upper_year.email}, {lower_year_name_email_map[lower_year.name]}"
+            emails = f"{upper_year.email}, {lower_year.email}"
             current_row = [emails, upper_year.name, lower_year.name]
             writer.writerow(current_row)
     f.close()
