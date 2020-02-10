@@ -104,9 +104,9 @@ def build_rankings(from_students, to_students):
     for student in from_students:
         student_rankings = {}
         for other_student in to_students:
-            student_rankings = calculate_points(student, other_student)
+            student_rankings[other_student] = calculate_points(student, other_student)
         student_rankings_pairs = sorted(student_rankings.items(), key=getvalue, reverse=True)
-        student_rankings_list = [other.name for other, in student_rankings_pairs]
+        student_rankings_list = [other.name for other, _ in student_rankings_pairs]
         rankings[student.name] = student_rankings_list
     return rankings
 

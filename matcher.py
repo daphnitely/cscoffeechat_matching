@@ -62,7 +62,10 @@ class Matcher:
         str: Name of new lower year student
         """
         index = self.urank[upper_year][lower_year] + 1  # index of lower year following l in list of prefs
-        return self.U[upper_year][index]
+        try:
+            return self.U[upper_year][index]
+        except IndexError:
+            return None
 
     def _match(self, past_matches, upper_years, next, matches):
         """
@@ -87,13 +90,12 @@ class Matcher:
 
         # get first and rest from upper_years list
         first_upper_year, rest = upper_years[0], upper_years[1:]
-        u = first_upper_year
 
         # next lower year for first_upper_year to propose to
         next_lower_year = next[first_upper_year]  
-        l = next_lower_year
         # set next to be lower year after next_lower_year in first_upper_year's list of prefs
-        next[first_upper_year] = self.after(first_upper_year, next_lower_year)  
+        if next_lower_year is not None:
+            next[first_upper_year] = self.after(first_upper_year, next_lower_year)  
 
         if next_lower_year in matches:
             current_upper_match = matches[next_lower_year]  # current match
@@ -106,11 +108,11 @@ class Matcher:
                 matches[next_lower_year] = first_upper_year  
             else:
                 rest.append(first_upper_year)  # first_upper_year remains unmatched
-        else:
+        elif next_lower_year is not None:
             # next_lower_year becomes match of first_upper_year
             matches[next_lower_year] = first_upper_year  
             
-        return self._match(rest, next, matches)
+        return self._match(past_matches, rest, next, matches)
 
     def match(self, past_matches):
         """
