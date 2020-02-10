@@ -4,7 +4,7 @@ from datetime import datetime
 
 from matcher import Matcher
 from student import Student
-from past_matches import create_past_matches_mapping 
+from past_matches import create_past_matches_mapping
 
 CURRENT_MONTH_FILE_NAME = "coffee-2020-02.csv"
 SIGNUP_DATA_DIR_NAME = "signup_data"
@@ -56,15 +56,15 @@ def main():
                 next(reader)
             for row in reader:
                 # Add the students who want to stay enrolled in CS Coffee Chat.
-                if (row[STAY_ENROLLED_COL].strip() == "Yes" and 
-                    row[NAME_COL] not in lower_year_name_email_map and 
+                if (row[STAY_ENROLLED_COL].strip() == "Yes" and
+                    row[NAME_COL] not in lower_year_name_email_map and
                     row[NAME_COL] not in upper_year_name_email_map):
                     print(row[NAME_COL])
                     handle_student_row(row)
 
     lower_year_rankings = build_rankings(lower_years, upper_years)
     upper_year_rankings = build_rankings(upper_years, lower_years)
-    
+
     matcher = Matcher(upper_year_rankings, lower_year_rankings)
 
     # matches is a list of lower year students, ordered based on which upper year student
@@ -78,10 +78,10 @@ def main():
     with open(current_date_title, "w+") as f:
         writer = csv.writer(f)
         writer.writerow(csv_header_row)
-        for index, match in enumerate(matches):
-            print(f"{upper_years[index].name} with {match}")
-            emails = f"{upper_years[index].email}, {lower_year_name_email_map[match]}"
-            current_row = [emails, upper_years[index].name, match]
+        for lower_year, upper_year in matches.items():
+            print(f"{upper_year.name} with {lower_year.name}")
+            emails = f"{upper_year.email}, {lower_year_name_email_map[lower_year.name]}"
+            current_row = [emails, upper_year.name, lower_year.name]
             writer.writerow(current_row)
     f.close()
 
@@ -95,19 +95,23 @@ def build_rankings(from_students, to_students):
         These students are the rankers, used as dict keys
     to_students: List[Student]
         These students are the rankees, used as dict values
+
+    Output
+    ------
+    Dict[Student, List[Student]]
     """
 
     def getvalue(pair):
         return pair[1]
-    
+
     rankings = {}
     for student in from_students:
         student_rankings = {}
         for other_student in to_students:
             student_rankings[other_student] = calculate_points(student, other_student)
         student_rankings_pairs = sorted(student_rankings.items(), key=getvalue, reverse=True)
-        student_rankings_list = [other.name for other, _ in student_rankings_pairs]
-        rankings[student.name] = student_rankings_list
+        student_rankings_list = [other for other, _ in student_rankings_pairs]
+        rankings[student] = student_rankings_list
     return rankings
 
 def calculate_points(ranker, rankee):
@@ -152,5 +156,3 @@ def handle_student_row(row):
 
 if __name__ == "__main__":
     main()
-
-
