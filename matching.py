@@ -59,7 +59,6 @@ def main():
                 if (row[STAY_ENROLLED_COL].strip() == "Yes" and
                     row[NAME_COL] not in lower_year_name_email_map and
                     row[NAME_COL] not in upper_year_name_email_map):
-                    print(row[NAME_COL])
                     handle_student_row(row)
 
     lower_year_rankings = build_rankings(lower_years, upper_years)
@@ -79,7 +78,7 @@ def main():
         writer = csv.writer(f)
         writer.writerow(csv_header_row)
         for lower_year, upper_year in matches.items():
-            print(f"{upper_year.name} with {lower_year.name}")
+            # print(f"{upper_year.name} with {lower_year.name}")
             emails = f"{upper_year.email}, {lower_year_name_email_map[lower_year.name]}"
             current_row = [emails, upper_year.name, lower_year.name]
             writer.writerow(current_row)

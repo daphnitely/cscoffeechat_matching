@@ -104,7 +104,8 @@ class Matcher:
             if next_lower_year.name in past_matches.get(current_upper_match.name, list()):
                 # if next_lower_year and current_upper_match had been matched in previous months
                 rest.append(current_upper_match)  # match becomes available again
-            if self.prefers(next_lower_year, first_upper_year, current_upper_match):
+                matches[next_lower_year] = first_upper_year
+            elif self.prefers(next_lower_year, first_upper_year, current_upper_match):
                 rest.append(current_upper_match)  # match becomes available again
                 # next_lower_year becomes match of first_upper_year
                 matches[next_lower_year] = first_upper_year
@@ -138,8 +139,8 @@ class Matcher:
         # get list of unmatched lower years
         unmatched_lower = [lower_year.name for lower_year in self.L.keys() if lower_year not in direct_matches]
         unmatched_upper = [upper_year.name for upper_year in self.U.keys() if upper_year not in direct_matches.values()]
-        print(unmatched_lower)
-        print(unmatched_upper)
+        print('Unmatched lower years', unmatched_lower)
+        print('Unmatched upper years', unmatched_upper)
         return direct_matches
 
 def _build_preferences(students):
