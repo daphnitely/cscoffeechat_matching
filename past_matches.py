@@ -1,35 +1,37 @@
-MENTOR_NAME = "Mentor name"
-MENTEE_1_NAME = "Mentee 1 name"
-MENTEE_2_NAME = "Mentee 2 name"
+from os import listdir, path
+from csv import DictReader
 
-def create_past_matches_mapping(reader, past_matches_map):
+PAST_MATCHES_DIR_NAME = "previous_matches"
+
+def create_past_matches_mapping():
+    past_matches_map = {}
+    # Iterate through the files of matching results from previous months to create mapping.
+    for filename in listdir(PAST_MATCHES_DIR_NAME):
+        with open(path.join(PAST_MATCHES_DIR_NAME, filename)) as f:
+            _read_past_matches_file(DictReader(f), past_matches_map)
+    return past_matches_map
+
+def _read_past_matches_file(csv_reader, past_matches_map):
     """
     Mutates the `past_matches_map` with entries from the given CSV file.
 
     Parameters
     ----------
+    csv_reader: csv.DictReader
+        Reference to CSV file reader that iterates through the rows
     past_matches: Dict[str, List[str]]
         Result so far.
         Past matches dict of upper year names to list of lower year names.
     """
-    # Find the columns for mentor and mentees names.
-    # Skip the first row because it is header.
-    header = next(reader)
-    for num, name in enumerate(header):
-        if name == MENTOR_NAME:
-            MENTOR_NAME_COL = num
-        elif name == MENTEE_1_NAME:
-            MENTEE_1_NAME_COL = num
-        else:
-            MENTEE_2_NAME_COL = num
-
     # Create mapping of mentor to array of mentees for each row.
-    for row in reader:
+    for row in csv_reader:
         # Fetch previous values of mapping.
-        values = past_matches_map.get(row[MENTOR_NAME_COL], list())
+        mentor_name = row["Mentor name"]
+        values = past_matches_map.get(mentor_name, list())
 
         # Append new values to existing keys instead of replacing.
-        values.append(row[MENTEE_1_NAME_COL])
-        if row[MENTEE_2_NAME_COL] != '':
-            values.append(row[MENTEE_2_NAME_COL])
-        past_matches_map[row[MENTOR_NAME_COL]] = values
+        values.append(row["Mentee 1 name"])
+        if row.get("Mentee 2 name"):
+            values.append(row["Mentee 2 name"])
+        
+        past_matches_map[mentor_name] = values

@@ -6,10 +6,12 @@ class Matcher:
 
     Attributes
     ----------
-    upper_years: Dict[Student, List[Student]]
-        Dict of upper year names to list of lower year names
-    lower_years: Dict[Student, List[Student]]
-        Dict of lower year names to list of upper year names
+    U: Dict[Student, List[Student]]
+        Dict of upper years to list of lower years
+    L: Dict[Student, List[Student]]
+        Dict of lower years to list of upper years
+    past_matches: Dict[Student, List[Student]]
+        Dict of upper years to list of lower years they were previously matched to
     urank: Dict[Student, Dict[Student, int]]
         Dict of upper year students to (preferred student, index) dict.
         `self.urank[student][other_student]` is student's ranking of other_student.
@@ -17,14 +19,16 @@ class Matcher:
         Dict of lower year students to (preferred student, index) dict.
     """
 
-    def __init__(self, upper_years, lower_years):
+    def __init__(self, upper_years, lower_years, past_matches):
         """
         Constructs a Matcher instance.
         Takes a dict of upper_years's match preferences, `upper_years`,
-        and a dict of lower_years's match preferences, `lower_years`.
+        a dict of lower_years's match preferences, `lower_years`,
+        and a dict of past upper_years to lower_years matchings.
         """
         self.U = upper_years
         self.L = lower_years
+        self.past_matches = past_matches
 
         # we index matching preferences at initialization
         # to avoid expensive lookups when matching
@@ -67,14 +71,12 @@ class Matcher:
         except IndexError:
             return None
 
-    def _match(self, past_matches, upper_years, next, matches):
+    def _match(self, upper_years, next, matches):
         """
         Try to match all upper_years with their next preferred lower year student.
 
         Parameters
         ----------
-        past_matches: Dict[str, List[str]]
-            Past matches dict of upper year names to list of lower year names.
         upper_years: List[Student]
             List of upper year names.
         next: Dict[Student, Student]
@@ -101,7 +103,7 @@ class Matcher:
 
         if next_lower_year in matches:
             current_upper_match = matches[next_lower_year]  # current match
-            if next_lower_year.name in past_matches.get(current_upper_match.name, list()):
+            if next_lower_year.name in self.past_matches.get(current_upper_match.name, list()):
                 # if next_lower_year and current_upper_match had been matched in previous months
                 rest.append(current_upper_match)  # match becomes available again
                 matches[next_lower_year] = first_upper_year
@@ -115,19 +117,15 @@ class Matcher:
             # next_lower_year becomes match of first_upper_year
             matches[next_lower_year] = first_upper_year  
             
-        return self._match(past_matches, rest, next, matches)
+        return self._match(rest, next, matches)
 
-    def match(self, past_matches):
+    def match(self):
         """
         Try to match all upper_years with their next preferred spouse.
 
-        Parameters
-        ----------
-        past_matches: Dict[str, List[str]]
-            Past matches dict of upper year names to list of lower year names.
-
         Output
         ------
+        Dict[Student, Student]
         Completed `matches` dictionary mapping lower years to upper years.
         """
         # get the complete list of upper_years
@@ -135,7 +133,7 @@ class Matcher:
         # if not defined, map each upper year to their first preference
         next = {upper_year_student: ranks[0] for upper_year_student, ranks in self.U.items()}
 
-        direct_matches = self._match(past_matches, upper_years, next, matches={})
+        direct_matches = self._match(upper_years, next, matches={})
         # get list of unmatched lower years
         unmatched_lower = [lower_year.name for lower_year in self.L.keys() if lower_year not in direct_matches]
         unmatched_upper = [upper_year.name for upper_year in self.U.keys() if upper_year not in direct_matches.values()]
