@@ -4,7 +4,7 @@ def valid_filename(filename):
 
 def duplicate_matches(past_matches, matches):
     matches_pairs = set(
-        frozenset(s.name for s in students)
+        frozenset(s.email for s in students)
         for students in matches.items()
     )
     

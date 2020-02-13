@@ -16,7 +16,7 @@ def create_past_matches():
     # Iterate through the files of matching results from previous months to create mapping.
     for filename in listdir(PAST_MATCHES_DIR_NAME):
         with open(path.join(PAST_MATCHES_DIR_NAME, filename)) as f:
-            for pair in _read_past_matches_names(DictReader(f)):
+            for pair in _read_past_matches_emails(DictReader(f)):
                 past_matches_set.add(pair)
     return past_matches_set
 

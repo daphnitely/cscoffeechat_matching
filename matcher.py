@@ -72,7 +72,7 @@ class Matcher:
             return None
 
     def previously_matched(self, upper, lower):
-        return frozenset([upper.name, lower.name]) in self.past_matches
+        return frozenset([upper.email, lower.email]) in self.past_matches
 
     def _match(self, upper_years, next, matches):
         """
