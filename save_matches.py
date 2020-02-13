@@ -1,12 +1,6 @@
 from os.path import join
 from csv import DictWriter
 from datetime import datetime
-from collections import namedtuple
-
-from matcher import Matcher
-from student import Student
-from past_matches import create_past_matches_mapping
-from signup_students import read_signup_data
 
 MATCHING_DATA_DIR_NAME = "matching_data"
 
@@ -30,6 +24,7 @@ def save_matching_data(matches, output_file_name):
     """
     with open(join(MATCHING_DATA_DIR_NAME, output_file_name), "w+", newline='') as f:
         writer = DictWriter(f, fieldnames=fields)
+        writer.writeheader()
         for lower_year, upper_year in matches.items():
             # print(f"{upper_year.name} with {lower_year.name}")
             writer.writerow({

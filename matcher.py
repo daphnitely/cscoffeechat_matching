@@ -10,8 +10,8 @@ class Matcher:
         Dict of upper years to list of lower years
     L: Dict[Student, List[Student]]
         Dict of lower years to list of upper years
-    past_matches: Dict[Student, List[Student]]
-        Dict of upper years to list of lower years they were previously matched to
+    past_matches: Set[Set[string]]
+        Set of student name pairs reprenting students matched in the past.
     urank: Dict[Student, Dict[Student, int]]
         Dict of upper year students to (preferred student, index) dict.
         `self.urank[student][other_student]` is student's ranking of other_student.
@@ -71,6 +71,9 @@ class Matcher:
         except IndexError:
             return None
 
+    def previously_matched(self, upper, lower):
+        return frozenset([upper.name, lower.name]) in self.past_matches
+
     def _match(self, upper_years, next, matches):
         """
         Try to match all upper_years with their next preferred lower year student.
@@ -103,7 +106,7 @@ class Matcher:
 
         if next_lower_year in matches:
             current_upper_match = matches[next_lower_year]  # current match
-            if next_lower_year.name in self.past_matches.get(current_upper_match.name, list()):
+            if self.previously_matched(current_upper_match, next_lower_year):
                 # if next_lower_year and current_upper_match had been matched in previous months
                 rest.append(current_upper_match)  # match becomes available again
                 matches[next_lower_year] = first_upper_year
