@@ -9,3 +9,7 @@ def duplicate_matches(past_matches, matches):
     )
     
     return not past_matches.isdisjoint(matches_pairs)
+
+def unique_items(items):
+    items_list = list(items)
+    return len(set(items_list)) == len(items_list)

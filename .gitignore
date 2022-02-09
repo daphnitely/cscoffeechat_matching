@@ -1,6 +1,6 @@
 sendgrid.env
 credentials.json
-signup_data/
-previous_matches/
+signup_data/*.csv
+previous_matches/*.csv
 .idea/
 __pycache__

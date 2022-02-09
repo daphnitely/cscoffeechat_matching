@@ -1,8 +1,9 @@
 # cscoffeechat_matching
 
 ## Usage
+
 ```shell
-python ./matching.py -i coffee-2020-02.csv -o February_2020_matching.csv
+python3 ./matching.py --input coffee-2020-02.csv --output February_2020_matching.csv
 ```
 
 ## Authentication

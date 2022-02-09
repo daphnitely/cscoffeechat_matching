@@ -1,23 +1,36 @@
 from os import listdir, path
 from csv import DictReader
 from itertools import combinations
+from validate import valid_filename
+from warnings import warn
 
-PAST_MATCHES_DIR_NAME = "previous_matches"
-
-def create_past_matches():
+def create_past_matches(dir="previous_matches"):
     """
     Returns a set of sets with students who have already met.
 
     The inner sets all contain exactly 2 items and are frozen.
     They act like unordered tuples.
+
+    Parameters
+    ----------
+    dir: string
+        Name of the folder containing previous matches.
+        The folder should only contain CSV files.
+
+    Raises
+    ------
+    FileNotFoundError: If folder does not exist
     """
 
     past_matches_set = set()
     # Iterate through the files of matching results from previous months to create mapping.
-    for filename in listdir(PAST_MATCHES_DIR_NAME):
-        with open(path.join(PAST_MATCHES_DIR_NAME, filename)) as f:
-            for pair in _read_past_matches_emails(DictReader(f)):
-                past_matches_set.add(pair)
+    for filename in listdir(dir):
+        if valid_filename(filename):
+            with open(path.join(dir, filename)) as f:
+                for pair in _read_past_matches_emails(DictReader(f)):
+                    past_matches_set.add(pair)
+    if not past_matches_set:
+        warn("No past matches", ResourceWarning)
     return past_matches_set
 
 def _read_past_matches_names(csv_reader):

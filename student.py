@@ -1,23 +1,19 @@
+from dataclasses import dataclass
+
 # These are words that will appear in most intros, and should be ignored when calculating
 # the similarity score.
 # TODO: improve the set of words that we should ignore.
 IGNORED_WORDS = set(["I", "I'm", "and", "a", "to"])
 
+@dataclass
 class Student:
-    name = ""
-    email = ""
-    year = 1
-    gender = "Female"
-    should_match_with_same_gender = False
-    intro = ""
-
-    def __init__(self, name, email, year, gender, should_match_with_same_gender, intro):
-        self.name = name
-        self.email = email
-        self.year = year
-        self.gender = gender
-        self.should_match_with_same_gender = should_match_with_same_gender
-        self.intro = intro
+    name: str = ""
+    email: str = ""
+    year: int = 1
+    gender: str = "Female"
+    should_match_with_same_gender: bool = False
+    intro: str = ""
+    stay_enrolled: bool = False
 
     def __eq__(self, other):
         return self.email == other.email
